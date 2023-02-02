@@ -27,7 +27,7 @@ except:
 
 # Add data to input topic
 try:
-    for line in open("ip_address_with_country.txt"):
+    for line in open("data/dataset.txt"):
         ip_address, country_raw = line.split(",")
         country = country_raw[:-1]
         producer.send(
