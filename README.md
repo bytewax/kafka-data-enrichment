@@ -1,4 +1,4 @@
-# Template for a sample app
+# Enriching Streaming Data from Kafka
 
 - Skill level
     
@@ -6,18 +6,23 @@
     
 - Time to complete
     
-    **Approx. 25 min**
+    **Approx. 15 min**
     
 
-Introduction: *Here is a basic example of using Bytewax to turn an incoming stream of event logs from a hypothetical search engine into metrics over search sessions. In this example, we're going to focus on the dataflow itself and aggregating state, and gloss over details of building this processing into a larger system.*
+Introduction: *This example will cover how to write a dataflow to support in-line data enrichment. Data enrichment is the process of adding to or enhancing data to make it more suitable or useful for a specific purpose. It is most often the result of joining additional data from a 3rd party database or another internal data source. For this specific example we will consume a stream of IP addresses from Kafka as input, enrich them with third party data to determine the location of the IP address, and then produce data to Kafka. This example will leverage the built-in kafka input and kafka output to do so.*
 
 ## ****Prerequisites****
 
 **Kafka/Redpanda**
-
-**Postgres**
+To get started you will need a Kafka (Docker setup) or Redpanda (Docker setup) cluster running.
 
 **Python modules**
+
+pip install bytewax==0.15.0 requests==2.28.0 kafka-python==2.0.2
+
+**Data**
+
+The data source for this example is under the [data directory](/data/data.) in the [bytewax repo](https://github.com/bytewax/bytewax) and you can load it the data to the running kafka cluster with the code shown below. This code is outside of the scope of this example. It is creating an input and output topic and then writing some sample data to the topic.
 
 ## Your Takeaway
 
