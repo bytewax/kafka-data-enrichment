@@ -14,7 +14,9 @@ Introduction: *This example will cover how to write a dataflow to support inline
 ## ****Prerequisites****
 
 **Kafka/Redpanda**
-Kafka and Redpanda can be used interchangeably, but we will use Redpanda in this demo for the ease of use it provides. To get started you will need Redpanda [rpk installed](https://docs.redpanda.com/docs/get-started/rpk-install/). The [startup script]() in the tutorial repository will start a Redpanda cluster.
+Kafka and Redpanda can be used interchangeably, but we will use Redpanda in this demo for the ease of use it provides. We will use docker compose to start a Redpanda cluster.
+
+https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/docker-compose.yaml#L1-L30
 
 **Python modules**
 
@@ -24,7 +26,7 @@ kafka-python==2.0.2
 
 **Data**
 
-The data source for this example is under the [data directory](/data/dataset.txt.) It will be loaded to the Redpanda cluster upon running the [startup script]() in the repository.
+The data source for this example is under the [data directory](https://github.com/bytewax/kafka-data-enrichment/tree/main/data) It will be loaded to the Redpanda cluster via the [utility script](https://github.com/bytewax/kafka-data-enrichment/blob/main/utils/utils.py) in the repository.
 
 ## Your Takeaway
 
@@ -60,7 +62,7 @@ Let's walk through constructing the input, the transformation code and the outpu
 
 Bytewax has a concept of built-in, configurable input sources. At a high level, these are code that can be configured and will be used as the input source for the dataflow. The [`KafkaInputConfig`](https://docs.bytewax.io/apidocs/bytewax.inputs#bytewax.inputs.KafkaInputConfig) is one of the more popular input sources. It is important to note that the input connection will be made on each worker, which allows the code to be parallelized across input partitions.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/a46b1b5877c44ccc6a8e4ae07e06d94ff2df144a/dataflow.py#L24-L30
+https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L27-L33
 
 In the code above, we have first initialized a Dataflow object, and used the `input` method to define our input. The input method takes two arguments, the `step_id` and the `input_config`. The `step_id` is used for recovery purposes and the input configuration is where we will use the `KafkaInputConfig` to set up our dataflow to consume from Kafka.
 
@@ -70,7 +72,7 @@ _A Quick Aside on Recovery: With Bytewax you can persist state in more durable f
 
 [Operators](https://docs.bytewax.io/apidocs/bytewax.dataflow) are Dataflow class methods that define how data will flow through the dataflow. Whether it will be filtered, modified, aggregated or accumulated. In this example we are modifying our data in-flight and will use the `map` operator. The `map` operator will receive a Python function as an argument and this will contain the code to modify the data payload.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/a46b1b5877c44ccc6a8e4ae07e06d94ff2df144a/dataflow.py#L9-L21
+https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L12-L24
 
 In the code above, we are making an http request to an external service, this is only for demonstration purposes. You should use something that is lower latency so you do not risk having the http request as a bottleneck or having network errors.
 
@@ -78,13 +80,13 @@ In the code above, we are making an http request to an external service, this is
 
 To capture data that is transformed in a dataflow, we will use the `capture` method. Similar to the input method, it takes a configuration as the argument. Bytewax has built-in output configurations and [`KafkaOutputConfig`](https://docs.bytewax.io/apidocs/bytewax.outputs#bytewax.outputs.KafkaOutputConfig) is one of those. We are going to use it in this example to write out the enriched data to a new topic.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/a46b1b5877c44ccc6a8e4ae07e06d94ff2df144a/dataflow.py#L32-L34
+https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L35-L37
 
 ### Kicking off execution
 
 With the above dataflow written, the final step is to specify the execution method. Whether it will run as a single threaded process on our local machine or be capable of scaling across a Kubernetes cluster. The methods used to define the execution are part of the execution module and more detail can be found in the long format documentation as well as in the API documentation.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/a46b1b5877c44ccc6a8e4ae07e06d94ff2df144a/dataflow.py#L36-L39
+https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L39-L42
 
 There are two types of workers: worker threads and worker processes. In most use cases where you are running Python code to transform and enrich data, you will want to use processes.
 
@@ -94,7 +96,7 @@ Bytewax dataflows can be run as you would a regular Python script `> python data
 
 To run this tutorial, you will need to clone the repo to your machine and then run the `run.sh` script. Which will start a container running Redpanda, load it with sample data while building the docker image and then run the dataflow from the tutorial.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/b38c9579c35fce6c7ead71a1ea4115e3551dfcb5/run.sh#L1-L8
+https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/run.sh#L1-L5
 
 For informational purposes, the below steps will show you how you can use `waxctl` to run a Bytewax dataflow on one of the public clouds, like AWS, with very little configuration. You will need to have the AWS CLI installed and configured and you will also have to have your streaming platform (Redpanda or Kafka) accessible from the instance.
 
@@ -145,10 +147,9 @@ Global Flags:
       --debug   enable verbose output
 ```
 
-
 ## Summary
 
-That’s it, you are awesome and we are going to rephrase our takeaway paragraph
+
 
 ## We want to hear from you!
 
