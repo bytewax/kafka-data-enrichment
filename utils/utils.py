@@ -2,11 +2,20 @@ from kafka import KafkaProducer
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka.errors import KafkaError
 from time import sleep
+import os
+
+REDPANDA_BROKER = os.getenv("REDPANDA_BROKER", "localhost:9092")
 
 input_topic_name = "ip_address_by_country"
 output_topic_name = "ip_address_by_location"
-localhost_bootstrap_server = "localhost:9092"
-producer = KafkaProducer(bootstrap_servers=[localhost_bootstrap_server])
+localhost_bootstrap_server = REDPANDA_BROKER
+producer = None
+while not producer:
+    try:
+        producer = KafkaProducer(bootstrap_servers=[localhost_bootstrap_server])
+    except Exception as e:
+        print(f"brokers not ready - {e}")
+        sleep(0.1)
 admin = KafkaAdminClient(bootstrap_servers=[localhost_bootstrap_server])
 
 # Create input topic

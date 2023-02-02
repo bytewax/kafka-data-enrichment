@@ -1,10 +1,13 @@
 import json
 import requests
+import os
 
 from bytewax.dataflow import Dataflow
 from bytewax.inputs import KafkaInputConfig
 from bytewax.outputs import KafkaOutputConfig
 from bytewax.execution import cluster_main
+
+REDPANDA_BROKER = os.getenv("REDPANDA_BROKER", "localhost:9092")
 
 def get_location(data):
     key, value = data
@@ -18,19 +21,19 @@ def get_location(data):
         "region": response_json.get("region"),
         "country_name": response_json.get("country_name"),
     }
-    return key, json.loads(location_data)
+    return key, json.dumps(location_data).encode()
 
 
 flow = Dataflow()
 flow.input(
     step_id="ip_address",
     input_config=KafkaInputConfig(
-        brokers=["localhost:9092"], topic="ip_address_by_country", tail=False
+        brokers=[REDPANDA_BROKER], topic="ip_address_by_country", tail=False
     ),
 )
 flow.map(get_location)
 flow.capture(
-    KafkaOutputConfig(brokers=["localhost:9092"], topic="ip_address_by_location")
+    KafkaOutputConfig(brokers=[REDPANDA_BROKER], topic="ip_address_by_location")
 )
 
 if __name__ == "__main__":

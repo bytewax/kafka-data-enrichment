@@ -6,6 +6,5 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-RUN python utils/utils.py
-
-ENTRYPOINT ["python", "dataflow.py"]
+RUN ["chmod", "+x", "utils/commands.sh"]
+ENTRYPOINT ["utils/commands.sh"]

@@ -92,7 +92,9 @@ There are two types of workers: worker threads and worker processes. In most use
 
 Bytewax dataflows can be run as you would a regular Python script `> python dataflow.py` for local testing purposes. Although the recommended way to run dataflows in production is to leverage the [waxctl command line tool](https://www.bytewax.io/docs/deployment/waxctl) to run the workloads on cloud infrastructure or on the [bytewax platform](https://www.bytewax.io/platform).
 
-To run this tutorial, you will need to clone the repo to your machine and then run the `run.sh` script.
+To run this tutorial, you will need to clone the repo to your machine and then run the `run.sh` script. Which will start a container running Redpanda, load it with sample data while building the docker image and then run the dataflow from the tutorial.
+
+https://github.com/bytewax/kafka-data-enrichment/blob/b38c9579c35fce6c7ead71a1ea4115e3551dfcb5/run.sh#L1-L8
 
 For informational purposes, the below steps will show you how you can use `waxctl` to run a Bytewax dataflow on one of the public clouds, like AWS, with very little configuration. You will need to have the AWS CLI installed and configured and you will also have to have your streaming platform (Redpanda or Kafka) accessible from the instance.
 
