@@ -64,7 +64,7 @@ Bytewax has a concept of built-in, configurable input sources. At a high level, 
 
 https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L27-L33
 
-In the code above, we have first initialized a Dataflow object, and used the `input` method to define our input. The input method takes two arguments, the `step_id` and the `input_config`. The `step_id` is used for recovery purposes and the input configuration is where we will use the `KafkaInputConfig` to set up our dataflow to consume from Kafka.
+In the code snippet, we have first initialized a Dataflow object, and used the `input` method to define our input. The input method takes two arguments, the `step_id` and the `input_config`. The `step_id` is used for recovery purposes and the input configuration is where we will use the `KafkaInputConfig` to set up our dataflow to consume from Kafka.
 
 _A Quick Aside on Recovery: With Bytewax you can persist state in more durable formats. This is so that in the case that the dataflow fails, you can recover state and the dataflow will not be required to recompute from the beginning. This is oftentimes referred to as checkpointing for other processing frameworks. With the `KafkaInputConfig` configuring recovery will handle the offset and consumer groups for you. This makes it easy to get started working with data in Kafka._
 
