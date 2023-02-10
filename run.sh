@@ -2,4 +2,4 @@
 docker build . -t bytewax-dataflow
 
 # run dataflow
-docker-compose up
+docker compose up
