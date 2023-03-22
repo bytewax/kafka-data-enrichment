@@ -1,6 +1,5 @@
-from kafka import KafkaProducer
-from kafka.admin import KafkaAdminClient, NewTopic
-from kafka.errors import KafkaError
+from confluent_kafka import Producer
+from confluent_kafka.admin import AdminClient, NewTopic
 from time import sleep
 import os
 
@@ -12,11 +11,11 @@ localhost_bootstrap_server = REDPANDA_BROKER
 producer = None
 while not producer:
     try:
-        producer = KafkaProducer(bootstrap_servers=[localhost_bootstrap_server])
+        producer = Producer({"bootstrap.servers": localhost_bootstrap_server})
     except Exception as e:
         print(f"brokers not ready - {e}")
         sleep(0.1)
-admin = KafkaAdminClient(bootstrap_servers=[localhost_bootstrap_server])
+admin = AdminClient({"bootstrap.servers": localhost_bootstrap_server})
 
 # Create input topic
 try:
@@ -39,12 +38,12 @@ try:
     for line in open("data/dataset.txt"):
         ip_address, country_raw = line.split(",")
         country = country_raw[:-1]
-        producer.send(
+        producer.produce(
             input_topic_name,
             key=f"{country}".encode("ascii"),
             value=f"{ip_address}".encode("ascii"),
         )
         sleep(0.1)
     print(f"input topic {output_topic_name} populated successfully")
-except KafkaError:
-    print("A kafka error occurred")
+finally:
+    producer.flush()

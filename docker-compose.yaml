@@ -28,10 +28,10 @@ services:
     - 9092:9092
     - 28082:28082
     - 29092:29092
-  bytewax:
-    image: bytewax-dataflow
-    container_name: bytewax-1
-    environment:
-      - REDPANDA_BROKER=redpanda:29092
-    depends_on:
-      - redpanda
+  # bytewax:
+  #   image: bytewax-dataflow
+  #   container_name: bytewax-1
+  #   environment:
+  #     - REDPANDA_BROKER=redpanda:29092
+  #   depends_on:
+  #     - redpanda

@@ -3,11 +3,11 @@ import requests
 import os
 
 from bytewax.dataflow import Dataflow
-from bytewax.inputs import KafkaInputConfig
-from bytewax.outputs import KafkaOutputConfig
+from bytewax.connectors.kafka import KafkaInput, KafkaOutput
 from bytewax.execution import cluster_main
 
 REDPANDA_BROKER = os.getenv("REDPANDA_BROKER", "localhost:9092")
+
 
 def get_location(data):
     key, value = data
@@ -26,15 +26,12 @@ def get_location(data):
 
 flow = Dataflow()
 flow.input(
-    step_id="ip_address",
-    input_config=KafkaInputConfig(
-        brokers=[REDPANDA_BROKER], topic="ip_address_by_country", tail=False
-    ),
+    "ip_address",
+    KafkaInput([REDPANDA_BROKER], ["ip_address_by_country"]),
 )
 flow.map(get_location)
-flow.capture(
-    KafkaOutputConfig(brokers=[REDPANDA_BROKER], topic="ip_address_by_location")
-)
+flow.inspect(print)
+flow.output("out", KafkaOutput([REDPANDA_BROKER], "ip_address_by_location"))
 
 if __name__ == "__main__":
     addresses = ["localhost:2101"]
