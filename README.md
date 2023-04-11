@@ -14,9 +14,9 @@ Introduction: *This example will cover how to write a dataflow to support inline
 ## ****Prerequisites****
 
 **Kafka/Redpanda**
-Kafka and Redpanda can be used interchangeably, but we will use Redpanda in this demo for the ease of use it provides. We will use docker compose to start a Redpanda cluster.
+Kafka and Redpanda can be used interchangeably, but we will use Redpanda in this demo for the ease of use it provides. We will use [Docker Compose](https://docs.docker.com/compose/) to start a local Redpanda cluster.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/docker-compose.yaml#L1-L30
+https://github.com/bytewax/kafka-data-enrichment/blob/main/docker-compose.yaml#L1-L30
 
 **Python modules**
 
@@ -37,7 +37,7 @@ The data source for this example is under the [data directory](https://github.co
 - Resources
 - Step 1. Redpanda Overview
 - Step 2. Constructing the Dataflow
-- Step 2. Deploying the Dataflow
+- Step 3. Running the Dataflow
 - Summary
 
 ## Resources
@@ -60,96 +60,63 @@ Let's walk through constructing the input, the transformation code and the outpu
 
 **Kafka Input**
 
-Bytewax has a concept of built-in, configurable input sources. At a high level, these are code that can be configured and will be used as the input source for the dataflow. The [`KafkaInputConfig`](https://docs.bytewax.io/apidocs/bytewax.inputs#bytewax.inputs.KafkaInputConfig) is one of the more popular input sources. It is important to note that the input connection will be made on each worker, which allows the code to be parallelized across input partitions.
+Bytewax has a concept of built-in, configurable input sources. At a high level, these are code that can be configured and will be used as the input source for the dataflow. The [`KafkaInput`](https://docs.bytewax.io/apidocs/bytewax.inputs#bytewax.inputs.KafkaInput) is one of the more popular input sources. It is important to note that a connection will be made on each worker, which allows each worker to read from the total number of partitions for a topic.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L27-L33
+https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L8-L15
 
-In the code snippet, we have first initialized a Dataflow object, and used the `input` method to define our input. The input method takes two arguments, the `step_id` and the `input_config`. The `step_id` is used for recovery purposes and the input configuration is where we will use the `KafkaInputConfig` to set up our dataflow to consume from Kafka.
+In the code snippet, we have first initialized an empty `Dataflow` object, and used the `input` method to define our input. The input method takes two arguments, the `step_id` and the `input_config`. The `step_id` is used for recovery purposes and the input configuration is where we will use the `KafkaInput` to set up our dataflow to consume from Redpanda.
 
-_A Quick Aside on Recovery: With Bytewax you can persist state in more durable formats. This is so that in the case that the dataflow fails, you can recover state and the dataflow will not be required to recompute from the beginning. This is oftentimes referred to as checkpointing for other processing frameworks. With the `KafkaInputConfig` configuring recovery will handle the offset and consumer groups for you. This makes it easy to get started working with data in Kafka._
+_A Quick Aside on Recovery: Bytewax can be configured to checkpoint the state of a running Dataflow. When recovery is configured, `KafkaInput` will store offset information so that when a dataflow is restarted, input will resume from the last completed checkpoint. This makes it easy to get started working with data in Kafka, as managing consumer groups and offsets is not neccessary._
 
 **Data Transformation**
 
-[Operators](https://docs.bytewax.io/apidocs/bytewax.dataflow) are Dataflow class methods that define how data will flow through the dataflow. Whether it will be filtered, modified, aggregated or accumulated. In this example we are modifying our data in-flight and will use the `map` operator. The `map` operator will receive a Python function as an argument and this will contain the code to modify the data payload.
+[Operators](https://docs.bytewax.io/apidocs/bytewax.dataflow) are Dataflow class methods that define how data will flow through the dataflow. Whether it will be filtered, modified, aggregated or accumulated. In this example we are modifying our data in-flight and will use the `map` operator. The `map` operator takes a Python function as an argument which will be called for every input item.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L12-L24
+https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L18-L33
 
-In the code above, we are making an http request to an external service, this is only for demonstration purposes. You should use something that is lower latency so you do not risk having the http request as a bottleneck or having network errors.
+In the code above, we are making an http request to an external service. This is only for demonstration purposes as issuing an http request to an external system for each item can be slow.
 
 **Kafka Output**
 
-To capture data that is transformed in a dataflow, we will use the `capture` method. Similar to the input method, it takes a configuration as the argument. Bytewax has built-in output configurations and [`KafkaOutputConfig`](https://docs.bytewax.io/apidocs/bytewax.outputs#bytewax.outputs.KafkaOutputConfig) is one of those. We are going to use it in this example to write out the enriched data to a new topic.
+To capture data that is transformed in a dataflow, we will use the `output` method. Similar to the input method, it takes a configuration class as an argument. Similar to `KafkaInput`, Bytewax has a built-in output configuration for Kafka [`KafkaOutput`](https://docs.bytewax.io/apidocs/bytewax.outputs#bytewax.outputs.KafkaOutput). We will configure our Dataflow to write the enriched data to a second topic: `ip_address_by_location`.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L35-L37
-
-### Kicking off execution
-
-With the above dataflow written, the final step is to specify the execution method. Whether it will run as a single threaded process on our local machine or be capable of scaling across a Kubernetes cluster. The methods used to define the execution are part of the execution module and more detail can be found in the long format documentation as well as in the API documentation.
-
-https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/dataflow.py#L39-L42
-
-There are two types of workers: worker threads and worker processes. In most use cases where you are running Python code to transform and enrich data, you will want to use processes.
+https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L35
 
 ## Step 3. Deploying the Dataflow
 
-Bytewax dataflows can be run as you would a regular Python script `> python dataflow.py` for local testing purposes. Although the recommended way to run dataflows in production is to leverage the [waxctl command line tool](https://www.bytewax.io/docs/deployment/waxctl) to run the workloads on cloud infrastructure or on the [bytewax platform](https://www.bytewax.io/platform).
+To run this tutorial, we will need to start our local redpanda cluster, and populate it with data.
 
-To run this tutorial, you will need to clone the repo to your machine and then run the `run.sh` script. Which will start a container running Redpanda, load it with sample data while building the docker image and then run the dataflow from the tutorial.
-
-https://github.com/bytewax/kafka-data-enrichment/blob/5e1a8ac5f1bfafcba30eac9810437c22e94dcfef/run.sh#L1-L5
-
-For informational purposes, the below steps will show you how you can use `waxctl` to run a Bytewax dataflow on one of the public clouds, like AWS, with very little configuration. You will need to have the AWS CLI installed and configured and you will also have to have your streaming platform (Redpanda or Kafka) accessible from the instance.
-
-```bash doctest:SKIP
-waxctl aws deploy kafka-enrichment.py --name kafka-enrichment \
-  --requirements-file-name requirements-ke.txt
+``` bash
+❯ docker-compose up -d
+[+] Running 1/1
+ ✔ Container redpanda-1  Started
 ```
 
-`waxctl` will configure and start an AWS EC2 instance and run your dataflow on the instance. To see the default parameters, you can run the help command and see them in the command line:
+Now that Redpanda is running, we'll use our utility script to populate it with sample data:
 
-```bash doctest:SKIP
-waxctl aws deploy -h                                               
-Deploy a dataflow to a new EC2 instance.
-​
-The deploy command expects one argument, which is the path of your Python dataflow file.
-By default, Waxctl creates a policy and a role that will allow the EC2 instance to store Cloudwatch logs and start sessions through Systems Manager.
-​
-Examples:
-  # The default command to deploy a dataflow named "bytewax" in a new EC2 instance running my-dataflow.py file.
-  waxctl aws deploy my-dataflow.py
-​
-  # Deploy a dataflow named "custom" using specific security groups and instance profile
-  waxctl aws deploy dataflow.py --name custom \
-    --security-groups-ids "sg-006a1re044efb2d23" \
-    --principal-arn "arn:aws:iam::1111111111:instance-profile/my-profile"
-​
-Usage:
-  waxctl aws deploy [PATH] [flags]
-​
-Flags:
-  -P, --associate-public-ip-address     associate a public IP address to the EC2 instance (default true)
-  -m, --detailed-monitoring             specifies whether detailed monitoring is enabled for the EC2 instance
-  -e, --extra-tags strings              extra tags to apply to the EC2 instance. The format must be KEY=VALUE
-  -h, --help                            help for deploy
-  -t, --instance-type string            EC2 instance type to be created (default "t2.micro")
-  -k, --key-name string                 name of an existing key pair
-  -n, --name string                     name of the EC2 instance to deploy the dataflow (default "bytewax")
-  -p, --principal-arn string            principal ARN to assign to the EC2 instance
-      --profile string                  AWS cli configuration profile
-  -f, --python-file-name string         python script file to run. Only needed when [PATH] is a tar file
-      --region string                   AWS region
-  -r, --requirements-file-name string   requirements.txt file if needed
-      --save-cloud-config               save cloud-config file to disk for troubleshooting purposes
-  -S, --security-groups-ids strings     security groups Ids to assign to the EC2 instance
-  -s, --subnet-id string                the ID of the subnet to launch the EC2 instance into
-​
-Global Flags:
-      --debug   enable verbose output
+``` bas
+❯ python ./utils/utils.py
+input topic ip_address_by_country created successfully
+output topic ip_address_by_location created successfully
+input topic ip_address_by_location populated successfully
 ```
+
+The only thing left to do is run our dataflow:
+
+``` bash
+❯ python -m bytewax.run dataflow:flow
+(b'Country', b'{"ip": "IP Address", "city": null, "region": null, "country_name": null}')
+(b'United States', b'{"ip": "76.132.87.205", "city": "Antioch", "region": "California", "country_name": "United States"}')
+(b'China', b'{"ip": "117.35.153.78", "city": "Xi\'an", "region": "Shaanxi", "country_name": "China"}')
+(b'China', b'{"ip": "61.237.226.46", "city": "Beijing", "region": "Beijing", "country_name": "China"}')
+(b'Germany', b'{"ip": "194.245.212.229", "city": "D\\u00fcsseldorf", "region": "North Rhine-Westphalia", "country_name": "Germany"}')
+...
+```
+
 
 ## Summary
 
-
+In this tutorial we learned how to build a Dataflow to enrich data read from Kafka.
 
 ## We want to hear from you!
 

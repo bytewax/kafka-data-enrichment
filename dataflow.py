@@ -4,9 +4,15 @@ import os
 
 from bytewax.dataflow import Dataflow
 from bytewax.connectors.kafka import KafkaInput, KafkaOutput
-from bytewax.execution import cluster_main
+
+flow = Dataflow()
 
 REDPANDA_BROKER = os.getenv("REDPANDA_BROKER", "localhost:9092")
+
+flow.input(
+    "ip_address",
+    KafkaInput([REDPANDA_BROKER], ["ip_address_by_country"]),
+)
 
 
 def get_location(data):
@@ -24,16 +30,6 @@ def get_location(data):
     return key, json.dumps(location_data).encode()
 
 
-flow = Dataflow()
-flow.input(
-    "ip_address",
-    KafkaInput([REDPANDA_BROKER], ["ip_address_by_country"]),
-)
 flow.map(get_location)
 flow.inspect(print)
 flow.output("out", KafkaOutput([REDPANDA_BROKER], "ip_address_by_location"))
-
-if __name__ == "__main__":
-    addresses = ["localhost:2101"]
-
-    cluster_main(flow, addresses=addresses, proc_id=0, worker_count_per_proc=1)
