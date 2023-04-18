@@ -16,7 +16,7 @@ Introduction: *This example will cover how to write a dataflow to support inline
 **Kafka/Redpanda**
 Kafka and Redpanda can be used interchangeably, but we will use Redpanda in this demo for the ease of use it provides. We will use [Docker Compose](https://docs.docker.com/compose/) to start a local Redpanda cluster.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/main/docker-compose.yaml#L1-L30
+https://github.com/bytewax/kafka-data-enrichment/blob/a2a37c1391521aa141550405a6e6c8087d32eb12/docker-compose.yaml#L1-L30
 
 **Python modules**
 
@@ -25,7 +25,7 @@ requests==2.28.0
 
 **Data**
 
-The data source for this example is under the [data directory](https://github.com/bytewax/kafka-data-enrichment/tree/main/data) It will be loaded to the Redpanda cluster via the [utility script](https://github.com/bytewax/kafka-data-enrichment/blob/main/utils/utils.py) in the repository.
+The data source for this example is under the [data directory](https://github.com/bytewax/kafka-data-enrichment/tree/a2a37c1391521aa141550405a6e6c8087d32eb12/data) It will be loaded to the Redpanda cluster via the [utility script](https://github.com/bytewax/kafka-data-enrichment/blob/a2a37c1391521aa141550405a6e6c8087d32eb12/utils/utils.py) in the repository.
 
 ## Your Takeaway
 
@@ -61,7 +61,7 @@ Let's walk through constructing the input, the transformation code and the outpu
 
 Bytewax has a concept of built-in, configurable input sources. At a high level, these are sources that can be configured and will be used as the input for a dataflow. The [`KafkaInput`](https://bytewax.io/apidocs/bytewax.connectors/kafka) is one of the more popular input sources. It is important to note that a connection will be made on each worker, which allows each worker to read from a disjoint set of partitions for a topic.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L8-L15
+https://github.com/bytewax/kafka-data-enrichment/blob/a2a37c1391521aa141550405a6e6c8087d32eb12/dataflow.py#L8-L15
 
 In the code snippet, we have first initialized an empty `Dataflow` object, and used the `input` method to define our input. The input method takes two arguments, the `step_id` and the `input_config`. The `step_id` is used for recovery purposes and the input configuration is where we will use the `KafkaInput` to set up our dataflow to consume from Redpanda.
 
@@ -71,7 +71,7 @@ _A Quick Aside on Recovery: Bytewax can be configured to checkpoint the state of
 
 [Operators](https://docs.bytewax.io/apidocs/bytewax.dataflow) are Dataflow class methods that define how data will flow through the dataflow. Whether it will be filtered, modified, aggregated or accumulated. In this example we are modifying our data in-flight and will use the `map` operator. The `map` operator takes a Python function as an argument which will be called for every input item.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L18-L33
+https://github.com/bytewax/kafka-data-enrichment/blob/a2a37c1391521aa141550405a6e6c8087d32eb12/dataflow.py#L18-L33
 
 In the code above, we are making an http request to an external service. This is only for demonstration purposes as issuing an http request to an external system for each item can be slow.
 
@@ -79,7 +79,7 @@ In the code above, we are making an http request to an external service. This is
 
 To capture data that is transformed in a dataflow, we will use the `output` method. Similar to the input method, it takes a configuration class as an argument. As with `KafkaInput`, Bytewax has a built-in output configuration for Kafka [`KafkaOutput`](https://docs.bytewax.io/apidocs/bytewax.outputs#bytewax.outputs.KafkaOutput). We will configure our Dataflow to write the enriched data to a second topic: `ip_address_by_location`.
 
-https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L35
+https://github.com/bytewax/kafka-data-enrichment/blob/a2a37c1391521aa141550405a6e6c8087d32eb12/dataflow.py#L35
 
 ## Step 3. Deploying the Dataflow
 
