@@ -20,9 +20,8 @@ https://github.com/bytewax/kafka-data-enrichment/blob/main/docker-compose.yaml#L
 
 **Python modules**
 
-bytewax==0.15.0
+bytewax[kafka]==0.16.*
 requests==2.28.0
-kafka-python==2.0.2
 
 **Data**
 
@@ -46,7 +45,7 @@ The data source for this example is under the [data directory](https://github.co
 
 ## Step 1. Redpanda Overview
 
-[Redpanda](https://docs.redpanda.com/docs/get-started/intro-to-events/) is a streaming platform that uses a kafka compatible API as a way to interface with the underlying system. Redpanda is a pub/sub style system where you can have many producers writing to one topic and many consumers subscribed to, and receiving the same data. Redpanda has the concept of topic partitions and these are used to increase parallelism and therefore throughput of a topic. Like Kafka, Redpanda has a concept of consumer groups to enable multiple consumers to read in a coordinated manner from a topic if you don't want every consumer to receive the same data. This allows you to increase the throughput and scale as your data scales.  
+[Redpanda](https://docs.redpanda.com/docs/get-started/intro-to-events/) is a streaming platform that uses a kafka compatible API as a way to interface with the underlying system. Redpanda is a pub/sub style system where you can have many producers writing to one topic and many consumers subscribed to, and receiving the same data. Like Kafka, Redpanda has the concept of partitioned topics, which can be read from independently, and increase throughput of a topic.
 
 Since Redpanda shares many of the same concepts and the same interface as Kafka, Bytewax can consume from a Redpanda cluster in a similar way. The code we will write in the next sections will not be required to change regardless of whether you are using Redpanda or Kafka.
 
@@ -58,9 +57,9 @@ Every dataflow will contain, at the very least an input and an output. In this e
 
 Let's walk through constructing the input, the transformation code and the output.
 
-**Kafka Input**
+**Redpanda Input**
 
-Bytewax has a concept of built-in, configurable input sources. At a high level, these are code that can be configured and will be used as the input source for the dataflow. The [`KafkaInput`](https://docs.bytewax.io/apidocs/bytewax.inputs#bytewax.inputs.KafkaInput) is one of the more popular input sources. It is important to note that a connection will be made on each worker, which allows each worker to read from the total number of partitions for a topic.
+Bytewax has a concept of built-in, configurable input sources. At a high level, these are sources that can be configured and will be used as the input for a dataflow. The [`KafkaInput`](https://bytewax.io/apidocs/bytewax.connectors/kafka) is one of the more popular input sources. It is important to note that a connection will be made on each worker, which allows each worker to read from a disjoint set of partitions for a topic.
 
 https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L8-L15
 
@@ -76,9 +75,9 @@ https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L18-L33
 
 In the code above, we are making an http request to an external service. This is only for demonstration purposes as issuing an http request to an external system for each item can be slow.
 
-**Kafka Output**
+**Redpanda Output**
 
-To capture data that is transformed in a dataflow, we will use the `output` method. Similar to the input method, it takes a configuration class as an argument. Similar to `KafkaInput`, Bytewax has a built-in output configuration for Kafka [`KafkaOutput`](https://docs.bytewax.io/apidocs/bytewax.outputs#bytewax.outputs.KafkaOutput). We will configure our Dataflow to write the enriched data to a second topic: `ip_address_by_location`.
+To capture data that is transformed in a dataflow, we will use the `output` method. Similar to the input method, it takes a configuration class as an argument. As with `KafkaInput`, Bytewax has a built-in output configuration for Kafka [`KafkaOutput`](https://docs.bytewax.io/apidocs/bytewax.outputs#bytewax.outputs.KafkaOutput). We will configure our Dataflow to write the enriched data to a second topic: `ip_address_by_location`.
 
 https://github.com/bytewax/kafka-data-enrichment/blob/main/dataflow.py#L35
 
