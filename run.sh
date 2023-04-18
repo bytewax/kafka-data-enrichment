@@ -1,5 +1,8 @@
-# build docker image
-docker build . -t bytewax-dataflow
+# Start Redpanda
+docker compose up -d
 
-# run dataflow
-docker compose up
+# Load Redpanda with data
+python ./utils/utils.py
+
+# Run the Dataflow
+python -m bytewax.run dataflow:flow
