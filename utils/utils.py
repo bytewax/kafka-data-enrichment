@@ -18,20 +18,14 @@ while not producer:
 admin = AdminClient({"bootstrap.servers": localhost_bootstrap_server})
 
 # Create input topic
-try:
-    input_topic = NewTopic(input_topic_name, num_partitions=20, replication_factor=1)
-    admin.create_topics([input_topic])
-    print(f"input topic {input_topic_name} created successfully")
-except:
-    print(f"Topic {input_topic_name} already exists")
+input_topic = NewTopic(input_topic_name, num_partitions=20, replication_factor=1)
+admin.create_topics([input_topic])
+print(f"input topic {input_topic_name} created successfully")
 
 # Create output topic
-try:
-    output_topic = NewTopic(output_topic_name, num_partitions=20, replication_factor=1)
-    admin.create_topics([output_topic])
-    print(f"output topic {output_topic_name} created successfully")
-except:
-    print(f"Topic {output_topic_name} already exists")
+output_topic = NewTopic(output_topic_name, num_partitions=20, replication_factor=1)
+admin.create_topics([output_topic])
+print(f"output topic {output_topic_name} created successfully")
 
 # Add data to input topic
 try:
@@ -44,6 +38,6 @@ try:
             value=f"{ip_address}".encode("ascii"),
         )
         sleep(0.1)
-    print(f"input topic {output_topic_name} populated successfully")
+    print(f"input topic {input_topic_name} populated successfully")
 finally:
     producer.flush()
